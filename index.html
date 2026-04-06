@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NEON ARCADE HUB</title>
+    <style>
+        :root { --neon-blue: #00fff2; --bg-dark: #0f0c29; }
+        body { margin: 0; background: var(--bg-dark); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 90%; max-width: 800px; }
+        
+        /* Aタグをカード化 */
+        .game-card {
+            display: block;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 255, 242, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 255, 242, 0.3);
+        }
+
+        h3 { color: var(--neon-blue); font-size: 24px; margin: 15px 0 10px; }
+        p { color: #ccc; font-size: 14px; margin-bottom: 20px; }
+
+        .play-btn {
+            display: inline-block;
+            background: var(--neon-blue);
+            color: var(--bg-dark);
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-grid">
+        <a href="game.html" class="game-card">
+            <div style="font-size: 60px;">💧</div>
+            <h3>もっちりエスケープ</h3>
+            <p>爆速スライムを操り、赤い敵を回避せよ！</p>
+            <span class="play-btn">PLAY NOW</span>
+        </a>
+
+        </div>
+
+</body>
+</html>
