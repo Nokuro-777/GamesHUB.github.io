@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>もっちりエスケープ - Extreme (PAD Support)</title>
+    <title>もっちりエスケープ - Extreme (PAD Support Full)</title>
     <style>
         body { margin: 0; overflow: hidden; background: #0f0c29; font-family: 'Helvetica Neue', Arial, sans-serif; touch-action: none; }
         canvas { display: block; }
@@ -46,7 +46,7 @@
             <p>画面を<span class="highlight">ドラッグ</span> または <span class="highlight">スティック</span>で操作！</p>
             <p><span class="highlight">黄色い星</span>を集めてスコアアップ。<br>
             迫りくる<span style="color:#ff0055">赤いヤツ</span>を音速で回避せよ。</p>
-            <p style="font-size: 12px; color: #888;">PAD接続時：Aボタンでスタート</p>
+            <p style="font-size: 12px; color: #888;">PAD接続時：Aボタン(○/×)でスタート</p>
         </div>
         <button onclick="startGame()">GAME START</button>
     </div>
@@ -109,7 +109,7 @@ function startGame() {
     init();
 }
 
-// --- 入力系イベント ---
+// --- 入力系イベント (マウス/タッチ) ---
 const updateTarget = (e) => {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -129,10 +129,17 @@ canvas.addEventListener('touchmove', (e) => {
 }, {passive: false});
 canvas.addEventListener('touchend', () => { isDragging = false; });
 
-// --- ゲームパッド処理 ---
+// --- ゲームパッド処理 (最適化) ---
 function handleGamepad() {
     const gamepads = navigator.getGamepads();
-    const gp = gamepads[0];
+    let gp = null;
+    for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i]) {
+            gp = gamepads[i];
+            break;
+        }
+    }
+    
     if (!gp) return;
 
     // スティック移動 (左スティック)
@@ -144,7 +151,11 @@ function handleGamepad() {
         if (Math.abs(stickX) > threshold || Math.abs(stickY) > threshold) {
             player.x += stickX * player.speed;
             player.y += stickY * player.speed;
-            isDragging = false; // パッド操作時はドラッグを無効化
+            
+            // パッド操作時はマウスのターゲットを同期させて急な戻りを防ぐ
+            target.x = player.x;
+            target.y = player.y;
+            isDragging = false;
             
             // 画面外防止
             player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
@@ -152,16 +163,17 @@ function handleGamepad() {
         }
     }
 
-    // ボタン操作 (Aボタン/Index 0)
-    const isAByttonDown = gp.buttons[0].pressed;
-    if (isAByttonDown && !buttonPressed) {
+    // Aボタン操作 (Index 0)
+    const isAButtonPressed = gp.buttons[0].pressed;
+    if (isAButtonPressed && !buttonPressed) {
         if (!gameActive) {
-            if (titleScreen.style.display !== 'none' || gameOverScreen.style.display === 'flex') {
+            // タイトル画面かゲームオーバー画面が表示されている時にリスタート
+            if (getComputedStyle(titleScreen).display !== 'none' || getComputedStyle(gameOverScreen).display === 'flex') {
                 startGame();
             }
         }
         buttonPressed = true;
-    } else if (!isAByttonDown) {
+    } else if (!isAButtonPressed) {
         buttonPressed = false;
     }
 }
@@ -191,7 +203,7 @@ function update() {
 
     if (!gameActive) return;
 
-    // ドラッグ移動 (マウス/タッチ用)
+    // ドラッグ移動
     if (isDragging) {
         const dx = target.x - player.x;
         const dy = target.y - player.y;
@@ -220,7 +232,7 @@ function update() {
         });
     }
 
-    // 衝突判定：敵
+    // 敵の追従と衝突判定
     enemies.forEach((enemy) => {
         const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
         enemy.x += Math.cos(angle) * enemy.speed;
@@ -241,13 +253,11 @@ function draw() {
     ctx.fillStyle = 'rgba(15, 12, 41, 0.3)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // プレイヤー描画
-    if (gameActive || player.trail.length > 0) {
-        player.trail.forEach((t, i) => {
-            ctx.fillStyle = `rgba(0, 255, 242, ${1 - i/15})`;
-            ctx.beginPath(); ctx.arc(t.x, t.y, player.radius * (1-i/18), 0, Math.PI*2); ctx.fill();
-        });
-    }
+    // プレイヤーと軌跡の描画
+    player.trail.forEach((t, i) => {
+        ctx.fillStyle = `rgba(0, 255, 242, ${1 - i/15})`;
+        ctx.beginPath(); ctx.arc(t.x, t.y, player.radius * (1-i/18), 0, Math.PI*2); ctx.fill();
+    });
 
     if (gameActive) {
         // エサ描画
